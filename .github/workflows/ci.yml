@@ -1,0 +1,84 @@
+# =============================================================================
+#  CI — 构建、测试、冒烟验证
+#
+#  设计取舍：
+#    * **不用 -Werror**。不同 GCC 版本会引入新的告警，把告警升级为错误会让
+#      CI 在"换了个编译器"这种与代码无关的情况下失败。告警仍然会打印出来
+#      供人工检查，但不阻断构建。
+#    * **矩阵覆盖开关组合**。压缩支持是自动探测的，需要在"有库"和"无库"
+#      两种环境下都验证降级路径可用。
+#    * **冒烟测试与单元测试并列**。单元测试可能全绿而二进制跑不起来
+#      （链接问题、运行时依赖缺失），所以额外跑一遍真实命令。
+# =============================================================================
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 默认构建（bz2 + lz4 自动启用）
+            flags: ""
+          - name: 关闭压缩（验证降级路径）
+            flags: "-DADSIM_WITH_COMPRESSION=OFF"
+          - name: 启用 libcurl
+            flags: "-DADSIM_WITH_CURL=ON"
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake g++ libbz2-dev liblz4-dev libcurl4-openssl-dev
+
+      - name: 显示工具链版本
+        run: |
+          cmake --version | head -1
+          g++ --version | head -1
+
+      - name: 配置
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.flags }}
+
+      - name: 构建
+        run: cmake --build build -j"$(nproc)"
+
+      - name: 单元测试
+        run: ./build/bin/adsim_tests
+
+      - name: 冒烟测试（真实命令能否跑起来）
+        run: |
+          set -e
+          BIN=./build/bin
+          $BIN/adsim_cli info
+          $BIN/generate_bag --output=/tmp/ci.bag --duration=5 --lidar-points=5000
+          $BIN/adsim_cli probe /tmp/ci.bag
+          $BIN/adsim_cli pipeline /tmp/ci.bag --out=/tmp/ci_clean.bag
+          $BIN/adsim_cli scenarios
+          $BIN/adsim_cli smooth
+          $BIN/adsim_cli bench --frames=10 --points=2000
+
+      - name: 压缩 bag 往返（仅默认构建）
+        if: matrix.flags == ''
+        run: |
+          set -e
+          BIN=./build/bin
+          for algo in lz4 bz2; do
+            $BIN/generate_bag --output=/tmp/ci_$algo.bag --duration=5 \
+                              --lidar-points=5000 --compression=$algo
+            $BIN/adsim_cli pipeline /tmp/ci_$algo.bag
+          done

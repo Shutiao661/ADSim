@@ -1,5 +1,9 @@
 # ADSim — 自动驾驶行为决策仿真及数据分析平台
 
+[![CI](https://github.com/Shutiao661/ROS2/actions/workflows/ci.yml/badge.svg)](https://github.com/Shutiao661/ROS2/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/)
+
 针对自动驾驶路测中「极端场景（Corner Case）难复现、行为决策算法验证成本高」的痛点，
 构建的一套集**路测数据清洗、仿真场景生成、Planning 算法验证**于一体的工具链。
 
@@ -9,11 +13,14 @@
 
 - [核心特性](#核心特性)
 - [快速开始](#快速开始)
+- [实测验证结果](#实测验证结果)
 - [架构总览](#架构总览)
 - [模块详解](#模块详解)
 - [可选依赖](#可选依赖)
 - [设计取舍](#设计取舍)
 - [目录结构](#目录结构)
+- [文档](#文档)
+- [更新日志](CHANGELOG.md) · [已知限制](CHANGELOG.md#已知限制)
 
 ---
 
@@ -406,6 +413,9 @@ CARLA 需要 GPU 与数十 GB 资源，单次仿真耗时以秒计，无法支�
 adsim/
 ├── CMakeLists.txt
 ├── README.md
+├── LICENSE                 # MIT
+├── CHANGELOG.md            # 版本变更与已知限制
+├── .github/workflows/      # CI（构建 + 测试 + 冒烟验证）
 ├── include/adsim/          # 公共头文件（接口契约）
 │   ├── common/             # 类型系统、内存池、线程池、环形缓冲、日志、性能剖析
 │   ├── datapipeline/       # 数据管道
@@ -414,7 +424,9 @@ adsim/
 │   ├── viz/                # 可视化
 │   └── agent/              # LLM 打标
 ├── src/                    # 实现
-├── apps/adsim_cli/         # 命令行入口
+├── apps/
+│   ├── adsim_cli/          # 命令行入口
+│   └── adsim_viz/          # Qt 交互前端（可选）
 ├── tests/                  # 单元测试（自带轻量框架，零外部依赖）
 ├── tools/generate_bag.cpp  # 合成数据生成器
 └── docs/                   # 设计文档
@@ -426,3 +438,13 @@ adsim/
 
 - [架构设计](docs/architecture.md) — 模块职责、数据流、关键接口
 - [算法说明](docs/algorithms.md) — 各算法的原理、参数标定与验证方式
+
+---
+
+## 许可
+
+本项目采用 [MIT 许可证](LICENSE)。
+
+## 反馈
+
+问题与建议请提 [Issue](https://github.com/Shutiao661/ROS2/issues)。
