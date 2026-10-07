@@ -1,0 +1,39 @@
+# ---- 构建产物 ----
+build/
+build-*/
+cmake-build-*/
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+*.exe
+myexe
+
+# ---- CMake ----
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+compile_commands.json
+
+# ---- 测试与运行产物 ----
+*.bag
+*.bag.active
+Testing/
+*.log
+
+# ---- 编辑器 / IDE ----
+.vscode/
+.idea/
+*.swp
+*~
+.cache/
+
+# ---- 平台 ----
+.DS_Store
+Thumbs.db
+
+# ---- 本地依赖（第三方库不入库）----
+third_party/
